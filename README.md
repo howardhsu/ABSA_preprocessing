@@ -12,7 +12,8 @@ We mostly focus on 3 datasets from SemEval (SemEval 2014, SemEval 2015, SemEval 
 
 #### Aspect Category Classification (ACC)
 
-|             | Laptop | Restaurant |
+| Dataset     | Laptop | Restaurant |
+|-------------|--------|------------|
 | SemEval2014 |        |     y      |
 | SemEval2014 |   y    |     y      |
 | SemEval2016 |   y    |     y      |
@@ -20,8 +21,8 @@ We mostly focus on 3 datasets from SemEval (SemEval 2014, SemEval 2015, SemEval 
 
 #### Aspect Category Sentiment Classification (ACSC)
 
-
-|             | Laptop | Restaurant |
+| Dataset     | Laptop | Restaurant |
+|-------------|--------|------------|
 | SemEval2014 |        |     y      |
 | SemEval2014 |   y    |     y      |
 | SemEval2016 |   y    |     y      |
