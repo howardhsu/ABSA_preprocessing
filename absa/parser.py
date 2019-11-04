@@ -108,6 +108,51 @@ def parse_asc_SemEval1516(fn):
                                     "polarity": opin.attrib['polarity'] })
     return corpus, None
 
+def parse_acc_SemEval14(fn):
+    root=ET.parse(fn).getroot()
+    cat2id={}
+    for opin in root.iter('aspectCategory'):
+        if opin.attrib['polarity'] in polar_idx:
+            cat_tag=opin.attrib['category'] 
+            if cat_tag not in cat2id:
+                cat2id[cat_tag]=len(cat2id)
+    print("# of labels", len(cat2id) )
+    corpus = []
+    for sents in root.iter("sentences"):
+        for sent in sents.iter("sentence"):
+            cat = []
+            for opin in sent.iter('aspectCategory'):
+                cat.append(opin.attrib['category'])
+
+            corpus.append({"id": sent.attrib['id'], 
+                           "sentence": sent.find('text').text, 
+                           "category": cat})
+            
+    return corpus, {'cat2id': cat2id}
+
+
+def parse_acc_SemEval1516(fn):
+    root=ET.parse(fn).getroot()
+    cat2id={}
+    for opin in root.iter('Opinion'):
+        if opin.attrib['polarity'] in polar_idx:
+            cat_tag=opin.attrib['category'] 
+            if cat_tag not in cat2id:
+                cat2id[cat_tag]=len(cat2id)
+    print("# of labels", len(cat2id) )
+    corpus = []
+    for review in root.iter("Review"):
+        for sent in review.iter("sentence"):
+            cat = []
+            for opin in sent.iter('Opinion'):
+                cat.append(opin.attrib['category'])
+
+            corpus.append({"id": sent.attrib['id'], 
+                           "sentence": sent.find('text').text, 
+                           "category": cat})
+
+    return corpus, {'cat2id': cat2id}
+
 
 def parse_acsc_SemEval14(fn):
     root=ET.parse(fn).getroot()
@@ -167,6 +212,11 @@ parser_config={
         '14': parse_asc_SemEval14,
         '15': parse_asc_SemEval1516,
         '16': parse_asc_SemEval1516
+    },
+    'acc': {
+        '14': parse_acc_SemEval14,
+        '15': parse_acc_SemEval1516,
+        '16': parse_acc_SemEval1516
     },
     'acsc': {
         '14': parse_acsc_SemEval14,
