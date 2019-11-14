@@ -95,17 +95,24 @@ def parse_asc_SemEval14(fn):
     return corpus, None
 
 def parse_asc_SemEval1516(fn):
+    """we remove aspects with two or more different polarities: annotation disagreement"""
     root=ET.parse(fn).getroot()
     corpus = []
     for review in root.iter("Review"):
         for sent in review.iter("sentence"):
+            target2polarity = {}
             for ix, opin in enumerate(sent.iter('Opinion')):
                 if opin.attrib['polarity'] in polar_idx \
                     and int(opin.attrib['from'] )!=int(opin.attrib['to'] ) and opin.attrib['target']!="NULL":
-                    corpus.append({"id": sent.attrib['id']+"_"+str(ix), 
-                                    "sentence": sent.find('text').text, 
-                                    "term": opin.attrib['target'], 
-                                    "polarity": opin.attrib['polarity'] })
+                    if opin.attrib['target'] in target2polarity and target2polarity[opin.attrib['target']] != opin.attrib['polarity']:
+                        target2polarity.pop(opin.attrib['target'], None)
+                    else:
+                        target2polarity[opin.attrib['target']] = opin.attrib['polarity']
+            for target, polarity in target2polarity.items():
+                corpus.append({"id": sent.attrib['id']+"_"+str(ix), 
+                                "sentence": sent.find('text').text, 
+                                "term": target, 
+                                "polarity": polarity})
     return corpus, None
 
 def parse_acc_SemEval14(fn):
