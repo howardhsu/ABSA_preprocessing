@@ -1,8 +1,6 @@
 import xml.etree.ElementTree as ET
 import nltk
 
-from .config import polar_idx
-
 def tokenize_text(raw_text, opins):
     text = []
     for ix, c in enumerate(raw_text):
@@ -62,7 +60,7 @@ def parse_ae_SemEval14(fn):
             corpus.append({"id": sent.attrib['id'], 
                         "tokens": tokens, 
                         "labels": lb})
-    return corpus, None
+    return corpus, {"label_list": ["O", "B", "I"]}
 
 def parse_ae_SemEval1516(fn):
     root=ET.parse(fn).getroot()
@@ -77,8 +75,12 @@ def parse_ae_SemEval1516(fn):
             corpus.append({"id": sent.attrib['id'], 
                         "tokens": tokens, 
                         "labels": lb})
-    return corpus, None
+    return corpus, {"label_list": ["O", "B", "I"]}
 
+
+polar_idx={'positive': 0, 'negative': 1, 'neutral': 2}
+
+idx_polar={0: 'positive', 1: 'negative', 2: 'neutral'}
 
 def parse_asc_SemEval14(fn):
     root=ET.parse(fn).getroot()
@@ -92,7 +94,7 @@ def parse_asc_SemEval14(fn):
                                 "sentence": sent.find('text').text, 
                                 "term": opin.attrib['term'], 
                                 "polarity": opin.attrib['polarity'] })
-    return corpus, None
+    return corpus, {"label_list": ["positive", "negative", "neutral"]}
 
 def parse_asc_SemEval1516(fn):
     """we remove aspects with two or more different polarities: annotation disagreement"""
@@ -101,21 +103,22 @@ def parse_asc_SemEval1516(fn):
     for review in root.iter("Review"):
         for sent in review.iter("sentence"):
             target2polarity = {}
+            forbid = []
             for ix, opin in enumerate(sent.iter('Opinion')):
-                if opin.attrib['polarity'] in polar_idx \
-                    and int(opin.attrib['from'] )!=int(opin.attrib['to'] ) and opin.attrib['target']!="NULL":
+                if opin.attrib['polarity'] in polar_idx:
                     if opin.attrib['target'] in target2polarity and target2polarity[opin.attrib['target']] != opin.attrib['polarity']:
-                        target2polarity.pop(opin.attrib['target'], None)
-                    else:
-                        target2polarity[opin.attrib['target']] = opin.attrib['polarity']
-            for target, polarity in target2polarity.items():
-                corpus.append({"id": sent.attrib['id']+"_"+str(ix), 
-                                "sentence": sent.find('text').text, 
-                                "term": target, 
-                                "polarity": polarity})
-    return corpus, None
+                        forbid.append(opin.attrib['target'])
+                    target2polarity[opin.attrib['target']] = opin.attrib['polarity']
+                    
+            for ix, opin in enumerate(sent.iter('Opinion')):
+                if opin.attrib['target'] not in forbid:
+                    corpus.append({"id": sent.attrib['id']+"_"+str(ix), 
+                                    "sentence": sent.find('text').text, 
+                                    "term": opin.attrib['target'], 
+                                    "polarity": opin.attrib['polarity']})
+    return corpus, {"label_list": ["positive", "negative", "neutral"]}
 
-def parse_acc_SemEval14(fn):
+def parse_scc_SemEval14(fn):
     root=ET.parse(fn).getroot()
     cat2id={}
     for opin in root.iter('aspectCategory'):
@@ -138,7 +141,7 @@ def parse_acc_SemEval14(fn):
     return corpus, {'cat2id': cat2id}
 
 
-def parse_acc_SemEval1516(fn):
+def parse_scc_SemEval1516(fn):
     root=ET.parse(fn).getroot()
     cat2id={}
     for opin in root.iter('Opinion'):
@@ -157,6 +160,37 @@ def parse_acc_SemEval1516(fn):
             corpus.append({"id": sent.attrib['id'], 
                            "sentence": sent.find('text').text, 
                            "category": cat})
+
+    return corpus, {'cat2id': cat2id}
+
+
+def parse_acc_SemEval1516(fn):
+    root=ET.parse(fn).getroot()
+    cat2id={}
+    for opin in root.iter('Opinion'):
+        if opin.attrib['polarity'] in polar_idx:
+            cat_tag=opin.attrib['category'] 
+            if cat_tag not in cat2id:
+                cat2id[cat_tag]=len(cat2id)
+    print("# of labels", len(cat2id) )
+    
+    root=ET.parse(fn).getroot()
+    corpus = []
+    for review in root.iter("Review"):
+        for sent in review.iter("sentence"):
+            target2cat = {}
+            forbid = []
+            for ix, opin in enumerate(sent.iter('Opinion')):
+                if opin.attrib['target'] in target2cat and target2cat[opin.attrib['target']] != opin.attrib['category']:
+                        forbid.append(opin.attrib['target'])
+                    target2cat[opin.attrib['target']] = opin.attrib['category']
+                    
+            for ix, opin in enumerate(sent.iter('Opinion')):
+                if opin.attrib['target'] not in forbid:
+                    corpus.append({"id": sent.attrib['id']+"_"+str(ix), 
+                                    "sentence": sent.find('text').text, 
+                                    "term": opin.attrib['target'], 
+                                    "category": opin.attrib['category']})
 
     return corpus, {'cat2id': cat2id}
 
@@ -220,11 +254,15 @@ parser_config={
         '15': parse_asc_SemEval1516,
         '16': parse_asc_SemEval1516
     },
-    'acc': {
+    'scc': {
         '14': parse_acc_SemEval14,
         '15': parse_acc_SemEval1516,
         '16': parse_acc_SemEval1516
     },
+    'acc': {
+        '15': parse_acc_SemEval1516,
+        '16': parse_acc_SemEval1516
+    },    
     'acsc': {
         '14': parse_acsc_SemEval14,
         '15': parse_acsc_SemEval1516,

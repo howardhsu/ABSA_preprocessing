@@ -1,8 +1,4 @@
 
-polar_idx={'positive': 0, 'negative': 1, 'neutral': 2}
-
-idx_polar={0: 'positive', 1: 'negative', 2: 'neutral'}
-
 file_config = {
     '14': {
         'laptop': {

@@ -105,3 +105,5 @@ venv.bak/
 
 # mac folder
 .DS_Store
+dataset/
+notebook/
