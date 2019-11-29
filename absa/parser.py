@@ -1,7 +1,7 @@
 import xml.etree.ElementTree as ET
 import nltk
 
-def tokenize_text(raw_text, opins):
+def tokenize_text(raw_text, opins, label_map):
     text = []
     for ix, c in enumerate(raw_text):
         # assuming that the tokenizer always yields fine-grained tokens for aspects 
@@ -19,7 +19,7 @@ def tokenize_text(raw_text, opins):
         
     text="".join(text)
     tokens=nltk.word_tokenize(text)
-    lb=[0]*len(tokens)
+    lb = [label_map["O"]]*len(tokens)
 
     for opin in opins: # mark each aspect
         token_idx, pt, tag_on=0, 0, False
@@ -31,13 +31,13 @@ def tokenize_text(raw_text, opins):
                     break
             if ix==opin[1]: #from
                 assert pt == 0 and c != ' '
-                lb[token_idx] = 1
+                lb[token_idx] = label_map["B-" + opin[3]]
                 tag_on = True
             elif ix==opin[2]: #to
                 assert pt == 0
-                tag_on = False   
+                tag_on = False
             elif tag_on and pt==0 and c!=' ':
-                lb[token_idx] = 2
+                lb[token_idx] = label_map["I-" + opin[3]]
             if c==' ' or ord(c)==160: # skip spaces.
                 pass
             elif tokens[token_idx][pt:pt+2]=='``' or tokens[token_idx][pt:pt+2]=="''":
@@ -46,8 +46,52 @@ def tokenize_text(raw_text, opins):
                 pt+=1
     return tokens, lb
 
+LABEL_SET = {    
+    "BIO": {
+        "label_map": {
+            "O": "O", 
+            "B-positive": "B", 
+            "B-negative": "B", 
+            "B-neutral": "B",
+            "B-conflict": "B",
+            "I-positive": "I",
+            "I-negative": "I",
+            "I-neutral": "I",
+            "I-conflict": "I",
+        },
+        "label_list": ["O", "B", "I"]
+    },
+    "AO": {
+        "label_map": {
+            "O": "O",
+            "B-positive": "A", 
+            "B-negative": "A", 
+            "B-neutral": "A",
+            "B-conflict": "A",
+            "I-positive": "A",
+            "I-negative": "A",
+            "I-neutral": "A",
+            "I-conflict": "A",
+        },
+        "label_list": ["O", "A"]
+    },
+    "PNNO": {
+        "label_map": {
+            "O": "O",
+            "B-positive": "positive", 
+            "B-negative": "negative", 
+            "B-neutral": "neutral",
+            "B-conflict": "neutral",
+            "I-positive": "positive",
+            "I-negative": "negative",
+            "I-neutral": "neutral",
+            "I-conflict": "neutral",
+        },
+        "label_list": ["O", "positive", "negative", "neutral"]
+    }
+}
 
-def parse_ae_SemEval14(fn):
+def parse_ae_SemEval14(fn, label_set = "BIO"):
     root=ET.parse(fn).getroot()
     corpus = []
     for sents in root.iter("sentences"):
@@ -55,14 +99,14 @@ def parse_ae_SemEval14(fn):
             opins=set()
             for opin in sent.iter('aspectTerm'):
                 if int(opin.attrib['from'] )!=int(opin.attrib['to'] ) and opin.attrib['term']!="NULL":
-                    opins.add((opin.attrib['term'], int(opin.attrib['from']), int(opin.attrib['to'])) )
-            tokens, lb = tokenize_text(sent.find('text').text, opins)       
+                    opins.add((opin.attrib['term'], int(opin.attrib['from']), int(opin.attrib['to']), opin.attrib['polarity']) )
+            tokens, lb = tokenize_text(sent.find('text').text, opins, LABEL_SET[label_set]["label_map"])
             corpus.append({"id": sent.attrib['id'], 
                         "tokens": tokens, 
                         "labels": lb})
-    return corpus, {"label_list": ["O", "B", "I"]}
+    return corpus, {"label_list": LABEL_SET[label_set]["label_list"]}
 
-def parse_ae_SemEval1516(fn):
+def parse_ae_SemEval1516(fn, label_set = "BIO"):
     root=ET.parse(fn).getroot()
     corpus = []
     for review in root.iter("Review"):
@@ -70,12 +114,12 @@ def parse_ae_SemEval1516(fn):
             opins=set()
             for opin in sent.iter('Opinion'):
                 if int(opin.attrib['from'] )!=int(opin.attrib['to'] ) and opin.attrib['target']!="NULL":
-                    opins.add((opin.attrib['target'], int(opin.attrib['from']), int(opin.attrib['to'])) )
-            tokens, lb = tokenize_text(sent.find('text').text, opins)       
+                    opins.add((opin.attrib['target'], int(opin.attrib['from']), int(opin.attrib['to']), opin.attrib['polarity']) )
+            tokens, lb = tokenize_text(sent.find('text').text, opins, LABEL_SET[label_set]["label_map"])       
             corpus.append({"id": sent.attrib['id'], 
                         "tokens": tokens, 
                         "labels": lb})
-    return corpus, {"label_list": ["O", "B", "I"]}
+    return corpus, {"label_list": LABEL_SET[label_set]["label_list"]}
 
 
 polar_idx={'positive': 0, 'negative': 1, 'neutral': 2}
@@ -118,6 +162,40 @@ def parse_asc_SemEval1516(fn):
                                     "polarity": opin.attrib['polarity']})
     return corpus, {"label_list": ["positive", "negative", "neutral"]}
 
+
+def parse_e2e_SemEval14(fn, label_set = "PNNO"):
+    root=ET.parse(fn).getroot()
+    corpus = []
+    for sents in root.iter("sentences"):
+        for sent in sents.iter("sentence"):
+            opins=set()
+            for opin in sent.iter('aspectTerm'):
+                if int(opin.attrib['from'] )!=int(opin.attrib['to'] ) and opin.attrib['term']!="NULL":
+                    opins.add((opin.attrib['term'], int(opin.attrib['from']), int(opin.attrib['to']), opin.attrib['polarity']) )
+            tokens, lb = tokenize_text(sent.find('text').text, opins, LABEL_SET[label_set]["label_map"])       
+            corpus.append({"id": sent.attrib['id'], 
+                        "tokens": tokens, 
+                        "labels": lb})
+    return corpus, {"label_list": LABEL_SET[label_set]["label_list"]}
+
+
+def parse_e2e_SemEval1516(fn, label_set = "PNNO"):
+    """we remove aspects with two or more different polarities: annotation disagreement"""
+    root=ET.parse(fn).getroot()
+    corpus = []
+    for review in root.iter("Review"):
+        for sent in review.iter("sentence"):
+            opins=set()
+            for opin in sent.iter('Opinion'):
+                if int(opin.attrib['from'] )!=int(opin.attrib['to'] ) and opin.attrib['target']!="NULL":
+                    opins.add((opin.attrib['target'], int(opin.attrib['from']), int(opin.attrib['to']), opin.attrib['polarity']) )
+            tokens, lb = tokenize_text(sent.find('text').text, opins, LABEL_SET[label_set]["label_map"])       
+            corpus.append({"id": sent.attrib['id'], 
+                        "tokens": tokens, 
+                        "labels": lb})
+    return corpus, {"label_list": LABEL_SET[label_set]["label_list"]}
+
+
 def parse_scc_SemEval14(fn):
     root=ET.parse(fn).getroot()
     cat2id={}
@@ -138,7 +216,9 @@ def parse_scc_SemEval14(fn):
                            "sentence": sent.find('text').text, 
                            "category": cat})
             
-    return corpus, {'cat2id': cat2id}
+    id2cat = {cat2id[cat]: cat for cat in cat2id}
+    return corpus, {'label_list': [id2cat[ix] for ix in range(len(id2cat))]}
+
 
 
 def parse_scc_SemEval1516(fn):
@@ -161,7 +241,8 @@ def parse_scc_SemEval1516(fn):
                            "sentence": sent.find('text').text, 
                            "category": cat})
 
-    return corpus, {'cat2id': cat2id}
+    id2cat = {cat2id[cat]: cat for cat in cat2id}
+    return corpus, {'label_list': [id2cat[ix] for ix in range(len(id2cat))]}
 
 
 def parse_acc_SemEval1516(fn):
@@ -182,8 +263,8 @@ def parse_acc_SemEval1516(fn):
             forbid = []
             for ix, opin in enumerate(sent.iter('Opinion')):
                 if opin.attrib['target'] in target2cat and target2cat[opin.attrib['target']] != opin.attrib['category']:
-                        forbid.append(opin.attrib['target'])
-                    target2cat[opin.attrib['target']] = opin.attrib['category']
+                    forbid.append(opin.attrib['target'])
+                target2cat[opin.attrib['target']] = opin.attrib['category']
                     
             for ix, opin in enumerate(sent.iter('Opinion')):
                 if opin.attrib['target'] not in forbid:
@@ -192,7 +273,9 @@ def parse_acc_SemEval1516(fn):
                                     "term": opin.attrib['target'], 
                                     "category": opin.attrib['category']})
 
-    return corpus, {'cat2id': cat2id}
+    id2cat = {cat2id[cat]: cat for cat in cat2id}
+    return corpus, {'label_list': [id2cat[ix] for ix in range(len(id2cat))]}
+
 
 
 def parse_acsc_SemEval14(fn):
@@ -216,8 +299,9 @@ def parse_acsc_SemEval14(fn):
                            "sentence": sent.find('text').text, 
                            "cat2polarity": cat2polarity}
                          )
-            
-    return corpus, {'cat2id': cat2id}
+
+    id2cat = {cat2id[cat]: cat for cat in cat2id}
+    return corpus, {'label_list': [id2cat[ix] for ix in range(len(id2cat))]}
 
 def parse_acsc_SemEval1516(fn):
     root=ET.parse(fn).getroot()
@@ -240,8 +324,8 @@ def parse_acsc_SemEval1516(fn):
                            "sentence": sent.find('text').text, 
                            "cat2polarity": cat2polarity}
                          )
-
-    return corpus, {'cat2id': cat2id}
+    id2cat = {cat2id[cat]: cat for cat in cat2id}
+    return corpus, {'label_list': [id2cat[ix] for ix in range(len(id2cat))]}
 
 parser_config={
     'ae': {
@@ -254,10 +338,15 @@ parser_config={
         '15': parse_asc_SemEval1516,
         '16': parse_asc_SemEval1516
     },
+    'e2e': {
+        '14': parse_e2e_SemEval14,
+        '15': parse_e2e_SemEval1516,
+        '16': parse_e2e_SemEval1516
+    },    
     'scc': {
-        '14': parse_acc_SemEval14,
-        '15': parse_acc_SemEval1516,
-        '16': parse_acc_SemEval1516
+        '14': parse_scc_SemEval14,
+        '15': parse_scc_SemEval1516,
+        '16': parse_scc_SemEval1516
     },
     'acc': {
         '15': parse_acc_SemEval1516,

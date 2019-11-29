@@ -35,6 +35,24 @@ python3 script/build.py --in_dir dataset/SemEval \
         --out_dir dataset/generated \
         --task asc --year 16 --domain rest
 
+
+python3 script/build.py --in_dir dataset/SemEval \
+        --out_dir dataset/generated \
+        --task e2e --year 14 --domain laptop
+
+python3 script/build.py --in_dir dataset/SemEval \
+        --out_dir dataset/generated \
+        --task e2e --year 14 --domain rest
+
+python3 script/build.py --in_dir dataset/SemEval \
+        --out_dir dataset/generated \
+        --task e2e --year 15 --domain rest
+
+python3 script/build.py --in_dir dataset/SemEval \
+        --out_dir dataset/generated \
+        --task e2e --year 16 --domain rest
+
+
 python3 script/build.py --in_dir dataset/SemEval \
         --out_dir dataset/generated \
         --task scc --year 14 --domain rest
