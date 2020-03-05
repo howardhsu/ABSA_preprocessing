@@ -1,6 +1,9 @@
 # ABSA_preprocessing
 A simple library to preprocess ABSA (Aspect-base Sentiment Analysis) related tasks from SemEval datasets.  
-Note that many existing papers may use different preprocessing methods, which obviously make comparison of different methods harder. We don't aim to build a univeral preprocessing method because there's no universal way as different models require different preprocessing, such as tokenization, capitalization, how many validation data is used etc. So we would rather treat preprocessing as one part of a method and this preprocessing code is just ONE way to convert xml data into model friendly inputs.
+Note that many existing papers may use different preprocessing procedures (which obviously make comparison of different methods harder).  
+We don't aim to build a univeral preprocessing method because there's no universal way as different models require different preprocessing, such as tokenization, capitalization, how many validation data to use, different levels of leaking testing data (unfortunately :-( ), etc.  
+In fact, many people asking for preprocessing code from our papers so we feel it would be better to build a codebase for our own use and share it with other people.
+
 
 ### Source
 We mostly focus on 3 datasets from SemEval ([SemEval 2014](http://alt.qcri.org/semeval2014/task4/), [SemEval 2015](http://alt.qcri.org/semeval2015/task12/), [SemEval 2016](http://alt.qcri.org/semeval2016/task5/) ) on two (2) domains (laptop and restaurant).
@@ -13,9 +16,12 @@ AE: given a review sentence ("The retina display is great."), find aspects("reti
 
 ASC: given an aspect ("retina display") and a review sentence ("The retina display is great."), detect the polarity of that aspect (positive).
 
-ACC: given a sentence, find aspect category in that sentence.
+[E2E-ABSA](https://github.com/lixin4ever/E2E-TBSA): the combination of the above two tasks as a sequence labeling task.
 
-ACSC: given a sentence, find polarities corresponding to each aspect category.
+### Usage
+
+
+
 
 #### Aspect Extraction (AE)
 
@@ -33,6 +39,25 @@ ACSC: given a sentence, find polarities corresponding to each aspect category.
 | SemEval2015 |        |     y      |
 | SemEval2016 |        |     y      |
 
+
+#### End-to-end Aspect-based Sentiment Analysis (E2E-ABSA)
+
+| Dataset     | Laptop | Restaurant |
+|-------------|--------|------------|
+| SemEval2014 |   y    |     y      |
+| SemEval2015 |        |     y      |
+| SemEval2016 |        |     y      |
+
+
+### TODO
+**Some code are adopted from our old papers that need clean updates ** 
+
+other tasks to add:
+
+ACC: given a sentence, find aspect category in that sentence.
+
+ACSC: given a sentence, find polarities corresponding to each aspect category.
+
 #### Aspect Category Classification (ACC)
 
 | Dataset     | Laptop | Restaurant |
@@ -49,6 +74,9 @@ ACSC: given a sentence, find polarities corresponding to each aspect category.
 | SemEval2014 |        |     y      |
 | SemEval2015 |   y    |     y      |
 | SemEval2016 |   y    |     y      |
+
+#### Aspect and Opinion Term Co-extraction (ATE and OTE)
+
 
 ### Citation
 If you find this rep to be useful, please cite the following paper.

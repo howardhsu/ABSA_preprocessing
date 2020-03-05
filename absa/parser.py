@@ -46,6 +46,7 @@ def tokenize_text(raw_text, opins, label_map):
                 pt+=1
     return tokens, lb
 
+# TODO: make these into configs, too
 LABEL_SET = {    
     "BIO": {
         "label_map": {
@@ -196,137 +197,6 @@ def parse_e2e_SemEval1516(fn, label_set = "PNNO"):
     return corpus, {"label_list": LABEL_SET[label_set]["label_list"]}
 
 
-def parse_scc_SemEval14(fn):
-    root=ET.parse(fn).getroot()
-    cat2id={}
-    for opin in root.iter('aspectCategory'):
-        if opin.attrib['polarity'] in polar_idx:
-            cat_tag=opin.attrib['category'] 
-            if cat_tag not in cat2id:
-                cat2id[cat_tag]=len(cat2id)
-    print("# of labels", len(cat2id) )
-    corpus = []
-    for sents in root.iter("sentences"):
-        for sent in sents.iter("sentence"):
-            cat = []
-            for opin in sent.iter('aspectCategory'):
-                cat.append(opin.attrib['category'])
-
-            corpus.append({"id": sent.attrib['id'], 
-                           "sentence": sent.find('text').text, 
-                           "category": cat})
-            
-    id2cat = {cat2id[cat]: cat for cat in cat2id}
-    return corpus, {'label_list': [id2cat[ix] for ix in range(len(id2cat))]}
-
-
-
-def parse_scc_SemEval1516(fn):
-    root=ET.parse(fn).getroot()
-    cat2id={}
-    for opin in root.iter('Opinion'):
-        if opin.attrib['polarity'] in polar_idx:
-            cat_tag=opin.attrib['category'] 
-            if cat_tag not in cat2id:
-                cat2id[cat_tag]=len(cat2id)
-    print("# of labels", len(cat2id) )
-    corpus = []
-    for review in root.iter("Review"):
-        for sent in review.iter("sentence"):
-            cat = []
-            for opin in sent.iter('Opinion'):
-                cat.append(opin.attrib['category'])
-
-            corpus.append({"id": sent.attrib['id'], 
-                           "sentence": sent.find('text').text, 
-                           "category": cat})
-
-    id2cat = {cat2id[cat]: cat for cat in cat2id}
-    return corpus, {'label_list': [id2cat[ix] for ix in range(len(id2cat))]}
-
-
-def parse_acc_SemEval1516(fn):
-    root=ET.parse(fn).getroot()
-    cat2id={}
-    for opin in root.iter('Opinion'):
-        if opin.attrib['polarity'] in polar_idx:
-            cat_tag=opin.attrib['category'] 
-            if cat_tag not in cat2id:
-                cat2id[cat_tag]=len(cat2id)
-    print("# of labels", len(cat2id) )
-    
-    root=ET.parse(fn).getroot()
-    corpus = []
-    for review in root.iter("Review"):
-        for sent in review.iter("sentence"):
-            target2cat = {}
-            forbid = []
-            for ix, opin in enumerate(sent.iter('Opinion')):
-                if opin.attrib['target'] in target2cat and target2cat[opin.attrib['target']] != opin.attrib['category']:
-                    forbid.append(opin.attrib['target'])
-                target2cat[opin.attrib['target']] = opin.attrib['category']
-                    
-            for ix, opin in enumerate(sent.iter('Opinion')):
-                if opin.attrib['target'] not in forbid:
-                    corpus.append({"id": sent.attrib['id']+"_"+str(ix), 
-                                    "sentence": sent.find('text').text, 
-                                    "term": opin.attrib['target'], 
-                                    "category": opin.attrib['category']})
-
-    id2cat = {cat2id[cat]: cat for cat in cat2id}
-    return corpus, {'label_list': [id2cat[ix] for ix in range(len(id2cat))]}
-
-
-
-def parse_acsc_SemEval14(fn):
-    root=ET.parse(fn).getroot()
-    cat2id={}
-    for opin in root.iter('aspectCategory'):
-        if opin.attrib['polarity'] in polar_idx:
-            cat_tag=opin.attrib['category'] 
-            if cat_tag not in cat2id:
-                cat2id[cat_tag]=len(cat2id)
-    print("# of labels", len(cat2id) )
-    corpus = []
-    for sents in root.iter("sentences"):
-        for sent in sents.iter("sentence"):
-            cat2polarity = {}
-            for opin in sent.iter('aspectCategory'):
-                if opin.attrib['polarity'] in polar_idx:
-                    cat2polarity[opin.attrib['category']] = opin.attrib['polarity'] 
-
-            corpus.append({"id": sent.attrib['id'], 
-                           "sentence": sent.find('text').text, 
-                           "cat2polarity": cat2polarity}
-                         )
-
-    id2cat = {cat2id[cat]: cat for cat in cat2id}
-    return corpus, {'label_list': [id2cat[ix] for ix in range(len(id2cat))]}
-
-def parse_acsc_SemEval1516(fn):
-    root=ET.parse(fn).getroot()
-    cat2id={}
-    for opin in root.iter('Opinion'):
-        if opin.attrib['polarity'] in polar_idx:
-            cat_tag=opin.attrib['category'] 
-            if cat_tag not in cat2id:
-                cat2id[cat_tag]=len(cat2id)
-    print("# of labels", len(cat2id) )
-    corpus = []
-    for review in root.iter("Review"):
-        for sent in review.iter("sentence"):
-            cat2polarity = {}
-            for opin in sent.iter('Opinion'):
-                if opin.attrib['polarity'] in polar_idx:
-                    cat2polarity[opin.attrib['category']] = opin.attrib['polarity'] 
-
-            corpus.append({"id": sent.attrib['id'], 
-                           "sentence": sent.find('text').text, 
-                           "cat2polarity": cat2polarity}
-                         )
-    id2cat = {cat2id[cat]: cat for cat in cat2id}
-    return corpus, {'label_list': [id2cat[ix] for ix in range(len(id2cat))]}
-
 parser_config={
     'ae': {
         '14': parse_ae_SemEval14,
@@ -342,19 +212,5 @@ parser_config={
         '14': parse_e2e_SemEval14,
         '15': parse_e2e_SemEval1516,
         '16': parse_e2e_SemEval1516
-    },    
-    'scc': {
-        '14': parse_scc_SemEval14,
-        '15': parse_scc_SemEval1516,
-        '16': parse_scc_SemEval1516
     },
-    'acc': {
-        '15': parse_acc_SemEval1516,
-        '16': parse_acc_SemEval1516
-    },    
-    'acsc': {
-        '14': parse_acsc_SemEval14,
-        '15': parse_acsc_SemEval1516,
-        '16': parse_acsc_SemEval1516
-    }
 }

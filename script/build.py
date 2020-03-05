@@ -6,6 +6,9 @@ import argparse
 
 from absa import gen_dataset, polar_idx, idx_polar, file_config, parser_config
 
+# TODO: add all config here.
+
+
 def main():
     
     parser = argparse.ArgumentParser()
