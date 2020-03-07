@@ -19,8 +19,11 @@ ASC: given an aspect ("retina display") and a review sentence ("The retina displ
 [E2E-ABSA](https://github.com/lixin4ever/E2E-TBSA): the combination of the above two tasks as a sequence labeling task.
 
 ### Usage
-
-
+```pip install nltk```  
+or  
+```conda install nltk```  
+then  
+```python script/build.py```
 
 
 #### Aspect Extraction (AE)
