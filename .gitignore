@@ -107,3 +107,4 @@ venv.bak/
 .DS_Store
 dataset/generated
 notebook/
+.vscode
