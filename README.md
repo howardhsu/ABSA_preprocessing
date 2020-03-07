@@ -50,7 +50,7 @@ ASC: given an aspect ("retina display") and a review sentence ("The retina displ
 
 
 ### TODO
-**Some code are adopted from our old papers that need clean updates ** 
+**Some code are adopted from our old papers that need clean rewriting. ** 
 
 other tasks to add:
 
