@@ -1,5 +1,6 @@
 # ABSA_preprocessing
 A simple library to preprocess ABSA (Aspect-base Sentiment Analysis) related tasks from SemEval datasets.  
+This is an on-going work and feedbacks are welcomed.  
 Note that many existing papers may use different preprocessing procedures (which obviously make comparison of different methods harder).  
 We don't aim to build a univeral preprocessing method because there's no universal way as different models require different preprocessing, such as tokenization, capitalization, how many validation data to use, different levels of leaking testing data (unfortunately :-( ), etc.  
 In fact, many people asking for preprocessing code from our papers so we feel it would be better to build a codebase for our own use and share it with other people.
@@ -19,6 +20,8 @@ ASC: given an aspect ("retina display") and a review sentence ("The retina displ
 [E2E-ABSA](https://github.com/lixin4ever/E2E-TBSA): the combination of the above two tasks as a sequence labeling task.
 
 ### Usage
+We run it under Python 3.6.  
+
 ```pip install nltk```  
 or  
 ```conda install nltk```  
